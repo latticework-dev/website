@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,7 +12,13 @@
 :root{
   --ground:#F7F8FA; --ink:#10151C; --muted:#5A6472;
   --rule:#DDE2E8; --lattice:#2B4C7E; --verify:#0F7A5A;
-  --panel:#FFFFFF; --dot:rgba(43,76,126,.22);
+  --panel:#FFFFFF;
+  /* The lattice is the page's measure, not a picture of one. Every vertical
+     value below is a multiple of this module -- one body line box. A drawn
+     lattice was tried and removed: its rows could not be made to coincide
+     with the panel's rules, and a nearly-aligned grid reads worse than an
+     implied one. */
+  --m:27px;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --sans:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -20,7 +26,7 @@
   :root:not([data-theme="light"]){
     --ground:#0D1117; --ink:#E8ECF1; --muted:#8C97A6;
     --rule:#232B36; --lattice:#7FA8DC; --verify:#3FBF92;
-    --panel:#131A23; --dot:rgba(127,168,220,.20);
+    --panel:#131A23;
   }
 }
 :root[data-theme="dark"]{
@@ -32,47 +38,76 @@
 html{-webkit-text-size-adjust:100%}
 body{
   margin:0; background:var(--ground); color:var(--ink);
-  font-family:var(--sans); font-size:16.5px; line-height:1.62;
+  font-family:var(--sans); font-size:16.5px; line-height:var(--m);
   -webkit-font-smoothing:antialiased;
 }
-.wrap{max-width:53rem; margin:0 auto; padding:0 1.5rem}
+.wrap{max-width:62rem; margin:0 auto; padding:0 1.5rem}
+/* One left edge for the whole page. The panel is wider than the prose not by
+   breaking out of the column, but because the prose is capped narrower --
+   so evidence and argument share a spine and differ only in measure. */
 a{color:var(--lattice); text-decoration:none; border-bottom:1px solid color-mix(in srgb,var(--lattice) 35%,transparent)}
 a:hover{border-bottom-color:var(--lattice)}
 a:focus-visible,button:focus-visible{outline:2px solid var(--lattice); outline-offset:3px; border-radius:2px}
 code,.mono{font-family:var(--mono); font-variant-ligatures:none}
 
 /* ---- masthead ---- */
-.masthead{display:flex; align-items:baseline; gap:.7rem; padding:2.2rem 0 0; font-family:var(--mono)}
+.masthead{display:flex; align-items:baseline; gap:calc(var(--m)/2); padding:calc(var(--m)*2) 0 0; font-family:var(--mono)}
 .mark{font-weight:600; font-size:.9rem; letter-spacing:.02em}
 .mark span{color:var(--lattice)}
 
 /* ---- hero ---- */
-.hero{padding:2.4rem 0 3.2rem}
-.lede{font-size:1.06rem; color:var(--muted); margin:0 0 1.3rem; max-width:44rem; text-wrap:balance}
+.hero{padding:calc(var(--m)*2) 0 calc(var(--m)*4)}
+.lede{font-size:1.06rem; color:var(--muted); margin:0 0 calc(var(--m)*1.5); max-width:40rem; text-wrap:balance}
 .panel{position:relative; border:1px solid var(--rule); background:var(--panel); border-radius:3px; overflow:hidden}
-#lattice{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
-.panel-in{position:relative; padding:1.6rem 1.5rem 1.4rem}
-.plabel{font-family:var(--mono); font-size:.68rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin:0 0 .7rem}
+.panel-in{position:relative; padding:calc(var(--m)*2)}
+.plabel{font-family:var(--mono); font-size:.68rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin:0 0 calc(var(--m)/2); line-height:calc(var(--m)/2)}
+/* The hash is the largest object on the page. Line breaks come from CSS
+   soft-wrapping against a width set in `ch` -- never from markup -- so the
+   copied string stays 64 contiguous characters at every breakpoint.
+   Character count per line is responsive; the size stays large. */
 .hash{
   font-family:var(--mono); font-weight:500; color:var(--ink);
-  font-size:clamp(.95rem,3.05vw,1.6rem); line-height:1.42;
-  margin:0 0 1.4rem; word-break:break-all; letter-spacing:-.005em;
+  font-size:2.55rem; line-height:calc(var(--m)*2);
+  margin:0 0 calc(var(--m)*2);
+  width:32ch; max-width:100%;
+  word-break:break-all; letter-spacing:-.012em;
 }
-.grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1.15rem 1.4rem; border-top:1px solid var(--rule); padding-top:1.25rem}
-.f dt{font-family:var(--mono); font-size:.66rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin:0 0 .3rem}
-.f dd{margin:0; font-family:var(--mono); font-size:.9rem; color:var(--ink)}
-.f dd .sub{display:block; color:var(--muted); font-size:.78rem; margin-top:.15rem}
+@media (max-width:1100px){ .hash{font-size:2.1rem} }
+@media (max-width:900px){  .hash{font-size:1.75rem} }
+/* below here 32 characters would push the type under body size, so the line
+   halves to 16 and the size goes back up */
+@media (max-width:820px){  .hash{font-size:2.3rem; width:16ch; line-height:calc(var(--m)*1.5)} }
+@media (max-width:560px){  .hash{font-size:1.95rem} }
+@media (max-width:430px){  .hash{font-size:1.62rem} }
+.grid{display:grid; grid-template-columns:repeat(4,1fr); gap:var(--m) calc(var(--m)*1.5); border-top:1px solid var(--rule); padding-top:var(--m)}
+.f dt{font-family:var(--mono); font-size:.66rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin:0 0 calc(var(--m)/4); line-height:calc(var(--m)/2)}
+/* Fields load "recorded" -- the values are already correct and complete.
+   When Horizon answers they become "confirmed": the same values, now known
+   to be true at this moment. Nothing appears, nothing reflows; the state
+   changes. A skeleton would imply the data was absent, which is the
+   opposite of what this page claims. */
+.f dd{margin:0; font-family:var(--mono); font-size:.9rem; color:var(--muted);
+      line-height:calc(var(--m)/1.5); transition:color .34s ease}
+.panel.confirmed .f dd{color:var(--ink)}
+.f:nth-child(1) dd{transition-delay:0ms}
+.f:nth-child(2) dd{transition-delay:70ms}
+.f:nth-child(3) dd{transition-delay:140ms}
+.f:nth-child(4) dd{transition-delay:210ms}
+.f dd .sub{display:block; color:var(--muted); font-size:.78rem; margin-top:calc(var(--m)/8);
+           line-height:calc(var(--m)/2); opacity:0; transition:opacity .34s ease 280ms}
+.panel.confirmed .f dd .sub{opacity:1}
+.srcline{transition:color .34s ease}
 .ok::before{content:"■"; color:var(--verify); margin-right:.45rem; font-size:.72em; vertical-align:.08em}
-.layers{border-top:1px solid var(--rule); margin-top:1.25rem; padding-top:1.25rem; display:grid; gap:.55rem}
-.layer{display:grid; grid-template-columns:9.5rem 1fr; gap:.9rem; align-items:baseline}
+.layers{border-top:1px solid var(--rule); margin-top:var(--m); padding-top:var(--m); display:grid; gap:calc(var(--m)/2)}
+.layer{display:grid; grid-template-columns:calc(var(--m)*6) 1fr; gap:var(--m); align-items:baseline; line-height:calc(var(--m)/1.5)}
 .layer dt{font-family:var(--mono); font-size:.66rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted)}
 .layer dd{margin:0; font-family:var(--mono); font-size:.85rem}
 .layer .pq{color:var(--verify)}
-.srcline{font-size:.82rem; color:var(--muted); margin:.95rem 0 0}
+.srcline{font-size:.82rem; color:var(--muted); margin:var(--m) 0 0; line-height:calc(var(--m)/1.5)}
 
 /* ---- clone ---- */
-.clone{margin-top:1.5rem}
-.cmdbox{display:flex; gap:.75rem; align-items:flex-start; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:.85rem 1rem}
+.clone{margin-top:calc(var(--m)*1.5)}
+.cmdbox{display:flex; gap:var(--m); align-items:flex-start; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:calc(var(--m)/1.5) var(--m)}
 .cmdbox pre{margin:0; flex:1; overflow-x:auto; font-family:var(--mono); font-size:.82rem; line-height:1.7; color:var(--ink)}
 .cmdbox .p{color:var(--muted); user-select:none}
 button.copy{
@@ -83,20 +118,20 @@ button.copy{
 button.copy:hover{color:var(--ink); border-color:var(--muted)}
 
 /* ---- sections ---- */
-section{padding:2.6rem 0; border-top:1px solid var(--rule)}
-h2{font-family:var(--mono); font-weight:600; font-size:1rem; letter-spacing:.01em; margin:0 0 1.1rem; color:var(--ink)}
-h2::before{content:""; display:block; width:1.6rem; height:2px; background:var(--lattice); margin-bottom:.55rem}
+section{padding:calc(var(--m)*3) 0; border-top:1px solid var(--rule)}
+h2{font-family:var(--mono); font-weight:600; font-size:1rem; letter-spacing:.01em; margin:0 0 var(--m); color:var(--ink); line-height:var(--m)}
+h2::before{content:""; display:block; width:var(--m); height:2px; background:var(--lattice); margin-bottom:calc(var(--m)/2)}
 h3{font-family:var(--mono); font-weight:600; font-size:.86rem; margin:0 0 .4rem; color:var(--ink)}
-p{margin:0 0 1rem; max-width:44rem}
+p{margin:0 0 var(--m); max-width:44rem}
 p:last-child{margin-bottom:0}
-.src{list-style:none; padding:0; margin:0; display:grid; gap:1rem}
-.src li{border-left:2px solid var(--rule); padding-left:1rem; max-width:44rem}
+.src{list-style:none; padding:0; margin:0; display:grid; gap:var(--m)}
+.src li{border-left:2px solid var(--rule); padding-left:var(--m); max-width:44rem}
 .src .who{font-family:var(--mono); font-size:.8rem; color:var(--ink); display:block; margin-bottom:.15rem}
 .src .when{font-family:var(--mono); font-size:.72rem; color:var(--lattice); letter-spacing:.04em}
 .src .what{font-size:.94rem; color:var(--muted); display:block; margin-top:.3rem}
 
 /* ---- table ---- */
-.tw{overflow-x:auto; margin:0 0 1.1rem}
+.tw{overflow-x:auto; margin:0 0 var(--m)}
 table{border-collapse:collapse; width:100%; min-width:30rem; font-family:var(--mono); font-size:.85rem}
 th,td{text-align:left; padding:.6rem .9rem .6rem 0; border-bottom:1px solid var(--rule)}
 th{font-size:.66rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); font-weight:500}
@@ -106,23 +141,30 @@ tr:not(.hi) td{color:var(--muted)}
 tbody tr:last-child td{border-bottom:none}
 
 /* ---- limits ---- */
-.limit{border:1px solid var(--rule); border-radius:3px; padding:1.15rem 1.25rem; margin:0 0 1rem; background:var(--panel)}
+.limit{border:1px solid var(--rule); border-radius:3px; padding:var(--m); margin:0 0 var(--m); background:var(--panel)}
 .limit.key{border-color:color-mix(in srgb,var(--lattice) 45%,var(--rule))}
 .limit p{margin:0; font-size:.96rem; color:var(--muted)}
 .limit p strong{color:var(--ink); font-weight:500}
 .limit p + p{margin-top:.6rem}
 
 /* ---- links ---- */
-.links{list-style:none; padding:0; margin:0; display:grid; gap:.55rem}
+.links{list-style:none; padding:0; margin:0; display:grid; gap:calc(var(--m)/2)}
 .links a{font-family:var(--mono); font-size:.88rem}
-footer{padding:2.2rem 0 3.4rem; border-top:1px solid var(--rule); font-family:var(--mono); font-size:.74rem; color:var(--muted)}
+footer{padding:calc(var(--m)*2) 0 calc(var(--m)*4); border-top:1px solid var(--rule); font-family:var(--mono); font-size:.74rem; color:var(--muted)}
 @media (max-width:860px){ .grid{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:640px){
   .grid{grid-template-columns:1fr; gap:.9rem}
   .layer{grid-template-columns:1fr; gap:.15rem}
   .panel-in{padding:1.25rem 1.1rem}
 }
-@media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important}
+  .f dd .sub{opacity:1}
+}
+/* no JS: the recorded state is the final state, and the age line is absent
+   because a relative time cannot be computed without a clock */
+.no-js .f dd{color:var(--ink)}
+.no-js .f dd .sub{opacity:1}
 </style>
 </head>
 <body>
@@ -136,7 +178,6 @@ footer{padding:2.2rem 0 3.4rem; border-top:1px solid var(--rule); font-family:va
     <p class="lede">An ML-DSA-65 signature authorising a real transaction on Stellar testnet.</p>
 
     <div class="panel">
-      <canvas id="lattice" aria-hidden="true"></canvas>
       <div class="panel-in">
         <p class="plabel">Transaction</p>
         <p class="hash">5f62349d0b8faeb61746fe457f461ad7fe4d03044c976163ac14f5b52215f4b9</p>
@@ -260,6 +301,7 @@ footer{padding:2.2rem 0 3.4rem; border-top:1px solid var(--rule); font-family:va
 
 <script>
 (function(){
+  document.documentElement.classList.remove("no-js");
   var TX="5f62349d0b8faeb61746fe457f461ad7fe4d03044c976163ac14f5b52215f4b9";
 
   var btn=document.getElementById("copy");
@@ -295,29 +337,10 @@ footer{padding:2.2rem 0 3.4rem; border-top:1px solid var(--rule); font-family:va
       st.textContent=d.successful?"succeeded":"failed";
       st.className=d.successful?"ok":"";
       document.getElementById("f-src").textContent="Fetched live from Horizon when this page loaded.";
+      document.querySelector(".panel").classList.add("confirmed");
     })
     .catch(function(){ /* static values already rendered and correct */ });
 
-  var c=document.getElementById("lattice");
-  if(c&&c.getContext){
-    var draw=function(){
-      var p=c.parentNode, r=p.getBoundingClientRect(), dpr=Math.min(devicePixelRatio||1,2);
-      c.width=r.width*dpr; c.height=r.height*dpr;
-      var x=c.getContext("2d"); x.scale(dpr,dpr); x.clearRect(0,0,r.width,r.height);
-      x.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--dot").trim()||"rgba(43,76,126,.2)";
-      // sheared basis: a real lattice basis is not orthogonal
-      var b1={x:26,y:0}, b2={x:9.5,y:22};
-      for(var i=-8;i<r.width/18+8;i++){
-        for(var j=0;j<r.height/22+2;j++){
-          var px=i*b1.x+j*b2.x, py=i*b1.y+j*b2.y;
-          if(px<-2||px>r.width+2||py<-2||py>r.height+2) continue;
-          x.beginPath(); x.arc(px,py,1,0,6.2832); x.fill();
-        }
-      }
-    };
-    draw();
-    var t; addEventListener("resize",function(){clearTimeout(t);t=setTimeout(draw,150);});
-  }
 })();
 </script>
 </body>
