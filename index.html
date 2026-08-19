@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ML-DSA on Soroban — Latticework</title>
+<meta name="description" content="A Stellar smart-contract account that verifies post-quantum ML-DSA-65 signatures on-chain, working on testnet today. Measured costs, reproducible in one command, with the limits stated plainly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#F7F8FA; --ink:#10151C; --muted:#5A6472;
+  --rule:#DDE2E8; --lattice:#2B4C7E; --verify:#0F7A5A;
+  --panel:#FFFFFF; --dot:rgba(43,76,126,.22);
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0D1117; --ink:#E8ECF1; --muted:#8C97A6;
+    --rule:#232B36; --lattice:#7FA8DC; --verify:#3FBF92;
+    --panel:#131A23; --dot:rgba(127,168,220,.20);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0D1117; --ink:#E8ECF1; --muted:#8C97A6;
+  --rule:#232B36; --lattice:#7FA8DC; --verify:#3FBF92;
+  --panel:#131A23; --dot:rgba(127,168,220,.20);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--sans); font-size:16.5px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:53rem; margin:0 auto; padding:0 1.5rem}
+a{color:var(--lattice); text-decoration:none; border-bottom:1px solid color-mix(in srgb,var(--lattice) 35%,transparent)}
+a:hover{border-bottom-color:var(--lattice)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--lattice); outline-offset:3px; border-radius:2px}
+code,.mono{font-family:var(--mono); font-variant-ligatures:none}
+
+/* ---- masthead ---- */
+.masthead{display:flex; align-items:baseline; gap:.7rem; padding:2.2rem 0 0; font-family:var(--mono)}
+.mark{font-weight:600; font-size:.9rem; letter-spacing:.02em}
+.mark span{color:var(--lattice)}
+
+/* ---- hero ---- */
+.hero{padding:2.4rem 0 3.2rem}
+.lede{font-size:1.06rem; color:var(--muted); margin:0 0 1.3rem; max-width:44rem; text-wrap:balance}
+.panel{position:relative; border:1px solid var(--rule); background:var(--panel); border-radius:3px; overflow:hidden}
+#lattice{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
+.panel-in{position:relative; padding:1.6rem 1.5rem 1.4rem}
+.plabel{font-family:var(--mono); font-size:.68rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin:0 0 .7rem}
+.hash{
+  font-family:var(--mono); font-weight:500; color:var(--ink);
+  font-size:clamp(.95rem,3.05vw,1.6rem); line-height:1.42;
+  margin:0 0 1.4rem; word-break:break-all; letter-spacing:-.005em;
+}
+.grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1.15rem 1.4rem; border-top:1px solid var(--rule); padding-top:1.25rem}
+.f dt{font-family:var(--mono); font-size:.66rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin:0 0 .3rem}
+.f dd{margin:0; font-family:var(--mono); font-size:.9rem; color:var(--ink)}
+.f dd .sub{display:block; color:var(--muted); font-size:.78rem; margin-top:.15rem}
+.ok::before{content:"■"; color:var(--verify); margin-right:.45rem; font-size:.72em; vertical-align:.08em}
+.layers{border-top:1px solid var(--rule); margin-top:1.25rem; padding-top:1.25rem; display:grid; gap:.55rem}
+.layer{display:grid; grid-template-columns:9.5rem 1fr; gap:.9rem; align-items:baseline}
+.layer dt{font-family:var(--mono); font-size:.66rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted)}
+.layer dd{margin:0; font-family:var(--mono); font-size:.85rem}
+.layer .pq{color:var(--verify)}
+.srcline{font-size:.82rem; color:var(--muted); margin:.95rem 0 0}
+
+/* ---- clone ---- */
+.clone{margin-top:1.5rem}
+.cmdbox{display:flex; gap:.75rem; align-items:flex-start; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:.85rem 1rem}
+.cmdbox pre{margin:0; flex:1; overflow-x:auto; font-family:var(--mono); font-size:.82rem; line-height:1.7; color:var(--ink)}
+.cmdbox .p{color:var(--muted); user-select:none}
+button.copy{
+  flex:none; font-family:var(--mono); font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); background:transparent; border:1px solid var(--rule); border-radius:2px;
+  padding:.4rem .6rem; cursor:pointer
+}
+button.copy:hover{color:var(--ink); border-color:var(--muted)}
+
+/* ---- sections ---- */
+section{padding:2.6rem 0; border-top:1px solid var(--rule)}
+h2{font-family:var(--mono); font-weight:600; font-size:1rem; letter-spacing:.01em; margin:0 0 1.1rem; color:var(--ink)}
+h2::before{content:""; display:block; width:1.6rem; height:2px; background:var(--lattice); margin-bottom:.55rem}
+h3{font-family:var(--mono); font-weight:600; font-size:.86rem; margin:0 0 .4rem; color:var(--ink)}
+p{margin:0 0 1rem; max-width:44rem}
+p:last-child{margin-bottom:0}
+.src{list-style:none; padding:0; margin:0; display:grid; gap:1rem}
+.src li{border-left:2px solid var(--rule); padding-left:1rem; max-width:44rem}
+.src .who{font-family:var(--mono); font-size:.8rem; color:var(--ink); display:block; margin-bottom:.15rem}
+.src .when{font-family:var(--mono); font-size:.72rem; color:var(--lattice); letter-spacing:.04em}
+.src .what{font-size:.94rem; color:var(--muted); display:block; margin-top:.3rem}
+
+/* ---- table ---- */
+.tw{overflow-x:auto; margin:0 0 1.1rem}
+table{border-collapse:collapse; width:100%; min-width:30rem; font-family:var(--mono); font-size:.85rem}
+th,td{text-align:left; padding:.6rem .9rem .6rem 0; border-bottom:1px solid var(--rule)}
+th{font-size:.66rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); font-weight:500}
+td.n{text-align:right; font-variant-numeric:tabular-nums; padding-right:1.6rem}
+tr.hi td{color:var(--ink)} tr.hi td:first-child{font-weight:500}
+tr:not(.hi) td{color:var(--muted)}
+tbody tr:last-child td{border-bottom:none}
+
+/* ---- limits ---- */
+.limit{border:1px solid var(--rule); border-radius:3px; padding:1.15rem 1.25rem; margin:0 0 1rem; background:var(--panel)}
+.limit.key{border-color:color-mix(in srgb,var(--lattice) 45%,var(--rule))}
+.limit p{margin:0; font-size:.96rem; color:var(--muted)}
+.limit p strong{color:var(--ink); font-weight:500}
+.limit p + p{margin-top:.6rem}
+
+/* ---- links ---- */
+.links{list-style:none; padding:0; margin:0; display:grid; gap:.55rem}
+.links a{font-family:var(--mono); font-size:.88rem}
+footer{padding:2.2rem 0 3.4rem; border-top:1px solid var(--rule); font-family:var(--mono); font-size:.74rem; color:var(--muted)}
+@media (max-width:860px){ .grid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:640px){
+  .grid{grid-template-columns:1fr; gap:.9rem}
+  .layer{grid-template-columns:1fr; gap:.15rem}
+  .panel-in{padding:1.25rem 1.1rem}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="mark">lattice<span>work</span></div>
+  </header>
+
+  <div class="hero">
+    <p class="lede">An ML-DSA-65 signature authorising a real transaction on Stellar testnet.</p>
+
+    <div class="panel">
+      <canvas id="lattice" aria-hidden="true"></canvas>
+      <div class="panel-in">
+        <p class="plabel">Transaction</p>
+        <p class="hash">5f62349d0b8faeb61746fe457f461ad7fe4d03044c976163ac14f5b52215f4b9</p>
+
+        <dl class="layers">
+          <div class="layer">
+            <dt>Authorisation</dt>
+            <dd class="pq">ML-DSA-65 — verified on-chain in <code>__check_auth</code></dd>
+          </div>
+          <div class="layer">
+            <dt>Envelope</dt>
+            <dd>Ed25519 — required by protocol 27</dd>
+          </div>
+        </dl>
+
+        <dl class="grid">
+          <div class="f"><dt>Ledger</dt><dd id="f-ledger">4,219,543</dd></div>
+          <div class="f"><dt>Closed</dt><dd id="f-closed">19 Aug 2026<span class="sub" id="f-age">06:11 UTC</span></dd></div>
+          <div class="f"><dt>Status</dt><dd id="f-status" class="ok">succeeded</dd></div>
+          <div class="f"><dt>Network</dt><dd>Stellar testnet</dd></div>
+        </dl>
+
+        <p class="srcline"><span id="f-src">Values recorded from Horizon.</span> <a href="https://stellar.expert/explorer/testnet/tx/5f62349d0b8faeb61746fe457f461ad7fe4d03044c976163ac14f5b52215f4b9">Check it yourself on stellar.expert &rarr;</a></p>
+      </div>
+    </div>
+
+    <div class="clone">
+      <div class="cmdbox">
+<pre><span class="p">$</span> git clone https://github.com/latticework-dev/soroban-ml-dsa
+<span class="p">$</span> cd soroban-ml-dsa &amp;&amp; ./demo.sh</pre>
+        <button class="copy" id="copy" type="button">Copy</button>
+      </div>
+      <p class="srcline">No configuration, no funded account, no cost. Builds the contracts, creates its own testnet account, deploys, signs a real transaction with a post-quantum key, and prints the hash.</p>
+    </div>
+  </div>
+
+  <section>
+    <h2>What this is</h2>
+    <p>A Stellar smart-contract account whose authorisation is verified with an ML-DSA-65 (FIPS&nbsp;204) signature, checked on-chain inside <code>__check_auth</code>. It works on testnet today with no protocol change — it uses Soroban's existing account abstraction.</p>
+    <p>The contracts, the signing library, and the measurement harness are in one repository, and the figures below reproduce from a clean clone.</p>
+  </section>
+
+  <section>
+    <h2>The problem</h2>
+    <p>Every Stellar account today is protected by Ed25519, which a sufficiently powerful quantum computer would break.</p>
+    <p>No mandate forces private firms to act. US financial-sector guidance is advisory, and no private-sector post-quantum requirement exists. What does exist is a set of dated official roadmaps pointing at the same window.</p>
+    <ul class="src">
+      <li>
+        <span class="who">EU Coordinated Implementation Roadmap</span>
+        <span class="when">European Commission / NIS Cooperation Group · 23 June 2025</span>
+        <span class="what">National transition strategies and cryptographic inventories underway by end of 2026. High-risk use cases transitioned no later than end of 2030.</span>
+      </li>
+      <li>
+        <span class="who">G7 Cyber Expert Group</span>
+        <span class="when">Chaired by the US Treasury and the Bank of England · 13 January 2026</span>
+        <span class="what">A coordinated roadmap for the financial sector. Advisory rather than binding, with critical systems encouraged to move ahead of a mid-2030s horizon.</span>
+      </li>
+      <li>
+        <span class="who">NIST IR 8547</span>
+        <span class="when">Initial public draft · November 2024</span>
+        <span class="what">ECC P-256 and RSA-2048 deprecated after 2030, disallowed after 2035.</span>
+      </li>
+    </ul>
+    <p style="margin-top:1.2rem">The Stellar Development Foundation published its Quantum Preparedness Plan in June 2026, and said plainly that this is not work SDF can do alone.</p>
+  </section>
+
+  <section>
+    <h2>What was measured</h2>
+    <p>Making it work is half the question. The other half is what it costs, and nobody had published that. Measured on-network against deployed contracts, testnet protocol&nbsp;27.</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Operation</th><th class="n">Per ledger</th><th class="n">Per transaction</th></tr></thead>
+        <tbody>
+          <tr class="hi"><td>ML-DSA-65 in contract</td><td class="n">14</td><td class="n">19.4%</td></tr>
+          <tr><td>ML-DSA-44 in contract</td><td class="n">22</td><td class="n">12.8%</td></tr>
+          <tr><td>Ed25519 host function</td><td class="n">390</td><td class="n">0.7%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Roughly 28&times; fewer per ledger than an Ed25519-verifying contract call — 7 in the strictly sequential case. That suits low-volume, high-value accounts: treasury, custody, institutional holdings. It does not suit consumer wallet traffic.</p>
+    <p>CAP-0087, which proposes native host functions for this operation, lists cost calibration as still to be determined. <strong>These measurements support the CAP.</strong> They were posted to its discussion thread on 19 August 2026.</p>
+  </section>
+
+  <section>
+    <h2>The limits</h2>
+    <div class="limit key">
+      <p><strong>This is a new kind of account, not an upgrade to an existing one.</strong></p>
+      <p>Stellar has two kinds: classic accounts, whose addresses start with <code>G</code>, and smart-contract accounts, starting <code>C</code>. This is the second kind. <strong>Existing classic <code>G…</code> accounts cannot be made quantum-safe on protocol 27</strong> — there is no way to attach a post-quantum key to one until the protocol upgrade planned for 2027. This serves new high-value accounts today and lays groundwork for upgrading existing ones later. Said plainly, because "quantum-safe Stellar accounts" naturally reads as covering the account you already have. It does not.</p>
+    </div>
+    <div class="limit">
+      <p><strong>Testnet only.</strong> Not for real funds.</p>
+    </div>
+    <div class="limit">
+      <p><strong>The ML-DSA dependency is unaudited.</strong> <code>ml-dsa</code> 0.1.1 states it has never been independently audited, and so does the alternative, <code>fips204</code>. No audited pure-Rust ML-DSA implementation exists — the general state of the art, not a shortcut taken here, and CAP-0087's own Security Concerns section describes the same difficulty.</p>
+      <p>It is tested against NIST ACVP and Wycheproof vectors, and differentially against a second independent implementation, producing byte-identical signatures. That lowers the risk. It does not remove it.</p>
+    </div>
+    <div class="limit">
+      <p><strong>The transaction envelope is still Ed25519-signed.</strong> Protocol 27 offers no alternative. What is post-quantum is the account's authorisation — QPP Stage 1.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>What's next</h2>
+    <p>Migration: getting existing accounts onto post-quantum protection without changing addresses or moving funds.</p>
+    <p>One part of it cannot wait. An account can publish a signed, on-chain record today stating that a new post-quantum key succeeds its current one. Its value comes entirely from <em>when</em> it was recorded — the ledger proves it existed before anyone could have forged it. Once quantum computers are real, that record can no longer be created honestly, because an attacker could produce an identical-looking one.</p>
+    <p>Protocol support can arrive later. The evidence has to be laid down first.</p>
+  </section>
+
+  <section>
+    <h2>Links</h2>
+    <ul class="links">
+      <li><a href="https://github.com/latticework-dev/soroban-ml-dsa">Repository — contracts, crates, and the demo</a></li>
+      <li><a href="https://github.com/latticework-dev/soroban-ml-dsa/blob/main/TECHNICAL-REPORT.md">Technical report</a></li>
+      <li><a href="https://github.com/latticework-dev/soroban-ml-dsa/blob/main/BENCHMARK.md">Cost reference</a></li>
+      <li><a href="https://github.com/stellar/stellar-protocol/discussions/1915#discussioncomment-18076058">CAP-0087 discussion — the measurements, posted</a></li>
+    </ul>
+  </section>
+
+  <footer>Latticework · testnet only · not audited</footer>
+</div>
+
+<script>
+(function(){
+  var TX="5f62349d0b8faeb61746fe457f461ad7fe4d03044c976163ac14f5b52215f4b9";
+
+  var btn=document.getElementById("copy");
+  if(btn&&navigator.clipboard){
+    btn.addEventListener("click",function(){
+      var t=btn.previousElementSibling.innerText.replace(/^\$ /gm,"");
+      navigator.clipboard.writeText(t).then(function(){
+        btn.textContent="Copied"; setTimeout(function(){btn.textContent="Copy";},1600);
+      });
+    });
+  }
+
+  function ago(d){
+    var s=(Date.now()-d.getTime())/1000;
+    if(s<3600) return Math.max(1,Math.round(s/60))+" minutes ago";
+    if(s<86400) return Math.round(s/3600)+" hours ago";
+    var days=Math.round(s/86400);
+    return days===1?"1 day ago":days+" days ago";
+  }
+  var el=document.getElementById("f-age");
+  if(el) el.textContent="06:11 UTC · "+ago(new Date("2026-08-19T06:11:05Z"));
+
+  fetch("https://horizon-testnet.stellar.org/transactions/"+TX,{mode:"cors"})
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(d){
+      var when=new Date(d.created_at);
+      document.getElementById("f-ledger").textContent=Number(d.ledger).toLocaleString("en-US");
+      document.getElementById("f-closed").firstChild.nodeValue=
+        when.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
+      document.getElementById("f-age").textContent=
+        when.toISOString().slice(11,16)+" UTC · "+ago(when);
+      var st=document.getElementById("f-status");
+      st.textContent=d.successful?"succeeded":"failed";
+      st.className=d.successful?"ok":"";
+      document.getElementById("f-src").textContent="Fetched live from Horizon when this page loaded.";
+    })
+    .catch(function(){ /* static values already rendered and correct */ });
+
+  var c=document.getElementById("lattice");
+  if(c&&c.getContext){
+    var draw=function(){
+      var p=c.parentNode, r=p.getBoundingClientRect(), dpr=Math.min(devicePixelRatio||1,2);
+      c.width=r.width*dpr; c.height=r.height*dpr;
+      var x=c.getContext("2d"); x.scale(dpr,dpr); x.clearRect(0,0,r.width,r.height);
+      x.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--dot").trim()||"rgba(43,76,126,.2)";
+      // sheared basis: a real lattice basis is not orthogonal
+      var b1={x:26,y:0}, b2={x:9.5,y:22};
+      for(var i=-8;i<r.width/18+8;i++){
+        for(var j=0;j<r.height/22+2;j++){
+          var px=i*b1.x+j*b2.x, py=i*b1.y+j*b2.y;
+          if(px<-2||px>r.width+2||py<-2||py>r.height+2) continue;
+          x.beginPath(); x.arc(px,py,1,0,6.2832); x.fill();
+        }
+      }
+    };
+    draw();
+    var t; addEventListener("resize",function(){clearTimeout(t);t=setTimeout(draw,150);});
+  }
+})();
+</script>
+</body>
+</html>
