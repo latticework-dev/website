@@ -205,18 +205,18 @@ footer{padding:2.2rem 0 3.4rem; border-top:1px solid var(--rule); font-family:va
 
   <section>
     <h2>What was measured</h2>
-    <p>Making it work is half the question. The other half is what it costs, and nobody had published that. Measured on-network against deployed contracts, testnet protocol&nbsp;27.</p>
+    <p>Making it work is half the question. The other half is what it costs, and nobody had published that. Measured on-network against deployed contracts, testnet protocol&nbsp;27. “Sequential” is the same figure without Soroban's parallel execution.</p>
     <div class="tw">
       <table>
-        <thead><tr><th>Operation</th><th class="n">Per ledger</th><th class="n">Per transaction</th></tr></thead>
+        <thead><tr><th>Operation</th><th class="n">Per ledger</th><th class="n">Sequential</th><th class="n">Per transaction</th></tr></thead>
         <tbody>
-          <tr class="hi"><td>ML-DSA-65 in contract</td><td class="n">14</td><td class="n">19.4%</td></tr>
-          <tr><td>ML-DSA-44 in contract</td><td class="n">22</td><td class="n">12.8%</td></tr>
-          <tr><td>Ed25519 host function</td><td class="n">390</td><td class="n">0.7%</td></tr>
+          <tr class="hi"><td>ML-DSA-65 in contract</td><td class="n">14</td><td class="n">7</td><td class="n">19.4%</td></tr>
+          <tr><td>ML-DSA-44 in contract</td><td class="n">22</td><td class="n">11</td><td class="n">12.8%</td></tr>
+          <tr><td>Ed25519 host function</td><td class="n">390</td><td class="n">195</td><td class="n">0.7%</td></tr>
         </tbody>
       </table>
     </div>
-    <p>Roughly 28&times; fewer per ledger than an Ed25519-verifying contract call — 7 in the strictly sequential case. That suits low-volume, high-value accounts: treasury, custody, institutional holdings. It does not suit consumer wallet traffic.</p>
+    <p>Roughly 28&times; fewer per ledger than an Ed25519-verifying contract call. That suits low-volume, high-value accounts: treasury, custody, institutional holdings. It does not suit consumer wallet traffic.</p>
     <p>CAP-0087, which proposes native host functions for this operation, lists cost calibration as still to be determined. <strong>These measurements support the CAP.</strong> They were posted to its discussion thread on 19 August 2026.</p>
   </section>
 
