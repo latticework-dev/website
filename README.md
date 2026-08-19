@@ -1,4 +1,4 @@
-# latticework.in
+# latticework.0xo.in
 
 Single static page. No framework, no build step, no dependencies.
 
