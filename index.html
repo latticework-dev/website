@@ -246,7 +246,7 @@ footer{padding:calc(var(--m)*2) 0 calc(var(--m)*4); border-top:1px solid var(--r
 
   <section>
     <h2>What was measured</h2>
-    <p>Making it work is half the question. The other half is what it costs, and nobody had published that. Measured on-network against deployed contracts, testnet protocol&nbsp;27. “Sequential” is the same figure without Soroban's parallel execution.</p>
+    <p>Making it work is half the question. The other half is what it costs, and nobody had published that. Measured on-network against deployed contracts, 19&nbsp;August&nbsp;2026, protocol&nbsp;27 &mdash; which mainnet still runs. “Sequential” is the same figure without Soroban's parallel execution.</p>
     <div class="tw">
       <table>
         <thead><tr><th>Operation</th><th class="n">Per ledger</th><th class="n">Sequential</th><th class="n">Per transaction</th></tr></thead>
@@ -257,7 +257,11 @@ footer{padding:calc(var(--m)*2) 0 calc(var(--m)*4); border-top:1px solid var(--r
         </tbody>
       </table>
     </div>
-    <p>Roughly 28&times; fewer per ledger than an Ed25519-verifying contract call. That suits low-volume, high-value accounts: treasury, custody, institutional holdings. It does not suit consumer wallet traffic.</p>
+    <p>Far fewer per ledger than an Ed25519-verifying contract call &mdash; 28&times; on protocol&nbsp;27, and roughly 103&times; on protocol&nbsp;28. That suits low-volume, high-value accounts: treasury, custody, institutional holdings. It does not suit consumer wallet traffic.</p>
+    <div class="limit">
+      <p><strong>Testnet moved to protocol&nbsp;28 on 27&nbsp;August&nbsp;2026, after these figures were taken.</strong></p>
+      <p>A fixed VM-instantiation cost of about 2.14&nbsp;million instructions went away, which lowers every row. It barely moves the lattice work: ML-DSA-65 falls from 19.4% to 18.8% of a transaction and stays at 14 per ledger. But it cuts the cheap Ed25519 baseline by roughly three quarters, which is why the comparison widens from 28&times; to about 103&times;. Net of that baseline the cryptography itself is unchanged to within 0.05%. The table above is protocol&nbsp;27, which is still what mainnet runs; a full re-measurement is scheduled once mainnet upgrades on 16&nbsp;September&nbsp;2026.</p>
+    </div>
     <p>CAP-0087, which proposes native host functions for this operation, lists cost calibration as still to be determined. <strong>These measurements support the CAP.</strong> They were posted to its discussion thread on 19 August 2026.</p>
   </section>
 
